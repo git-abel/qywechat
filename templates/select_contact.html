@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>选择外部联系人</title>
+</head>
+<body>
+    <h1>选择外部联系人</h1>
+    <form id="send-message-form">
+        <h3>发送消息</h3>
+        <label for="touser">接收者（touser）：</label>
+        <select name="touser" required>
+            <option value="" disabled selected>选择接收者</option>
+            {% for external_userid, contact in external_contacts.items() %}
+                <option value="{{ external_userid }}">{{ contact.name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="content">消息内容（content）：</label>
+        <textarea name="content" id="message-content" rows="4" cols="50" required></textarea>
+        <br>
+        <input type="button" value="发送消息" id="send-button">
+    </form>
+    <div id="message-container"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('message_received', function(data) {
+            var messageContainer = document.getElementById('message-container');
+            messageContainer.innerHTML += data.message + '<br>';
+        });
+
+        document.getElementById('send-button').addEventListener('click', function() {
+            var touser = document.getElementById('send-message-form').elements['touser'].value;
+            var content = document.getElementById('message-content').value;
+
+            // 发送消息数据到后端
+            socket.emit('send_message', {'touser': touser, 'content': content});
+
+            // 清空消息输入框
+            document.getElementById('message-content').value = "";
+        });
+    </script>
+</body>
+</html>
